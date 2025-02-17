@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+<form th:action th:object="${form}" method="post" enctype="multipart/form-data">
+  <div>
+    <label for="title">제목</label>
+    <input type="text" id="title" th:field="*{title}"/>
+  </div>
+
+  <div>
+    <label for="stockName">종목명</label>
+    <input type="text" id="stockName" th:field="*{stockName}"/>
+  </div>
+
+  <div>
+    <label for="content">내용</label>
+    <textarea id="content" th:field="*{content}"></textarea>
+  </div>
+
+  <div>
+    <input type="file" id="multipartFile" th:field="*{multipartFile}"/>
+  </div>
+
+  <button type="submit">보고서 제출</button>
+
+</form>
+</body>
+</html>

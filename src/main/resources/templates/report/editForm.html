@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+<div class="container">
+  <form th:action th:object="${report}" method="post" enctype="multipart/form-data">
+    <h2>
+      <label for="title">제목</label>
+      <input type="text" id="title" th:field="*{title}"/>
+    </h2>
+
+    <span class="no-file" th:if="${report.fileinfo == null}">첨부파일 없음</span>
+    <input type="file" id="multipartFile" name="multipartFile"/>
+
+    <table>
+      <tbody>
+      <tr>
+        <th scope="row">작성자</th>
+        <td th:text="${report.user.nickname}"></td>
+
+        <th scope="row">등록일</th>
+        <td th:text="${report.createdAt}"></td>
+      </tr>
+
+      <tr>
+        <th scope="row">종목명</th>
+        <td>
+          <input type="text" id="stockName" th:field="*{stockName}"/>
+        </td>
+
+        <th scope="row">조회수</th>
+        <td th:text="${report.hits}"></td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="content">
+      <textarea th:field="*{content}"></textarea>
+    </div>
+
+    <div>
+      <button type="submit">수정</button>
+    </div>
+
+    <div class="return">
+      <a th:href="|/report/${report.id}|">돌아가기</a>
+    </div>
+  </form>
+  <div>
+</body>
+</html>

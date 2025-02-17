@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="sammool.board.mapper.ReportMapper">
+
+    <insert id="save" parameterType="report" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO report (title, content, stock_name, created_at, user_id, file_id)
+        VALUES (#{title}, #{content}, #{stockName}, #{createdAt}, #{user.id}, #{fileinfo.id})
+    </insert>
+
+    <insert id="saveFile" parameterType="fileinfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fileinfo (upload_path, original_filename, stored_filename)
+        VALUES (#{uploadPath}, #{originalFilename}, #{storedFilename})
+    </insert>
+
+    <delete id="delete" parameterType="long">
+        DELETE FROM report WHERE id=#{id}
+    </delete>
+
+    <update id="update" parameterType="report">
+        UPDATE report
+        SET title = #{title},
+        stock_name = #{stockName},
+        content = #{content},
+        file_id = #{fileinfo.id},
+        updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <select id="getReportById" parameterType="long" resultMap="ReportMap">
+        SELECT r.id,
+        r.title,
+        r.content,
+        r.stock_name,
+        r.created_at,
+        r.updated_at,
+        r.deleted_at,
+        r.hits,
+        f.id AS file_id,
+        f.original_filename AS originalFilename,
+        f.stored_filename AS storedFilename,
+        f.upload_path AS uploadPath,
+        u.id AS user_id,
+        u.nickname AS userNickname
+        FROM report r
+        JOIN users u ON r.user_id = u.id
+        LEFT JOIN fileinfo f ON r.file_id = f.id
+        WHERE r.id = #{reportId}
+    </select>
+
+    <select id="getAll" resultMap="ReportMap" parameterType="searchDto">
+        SELECT r.id,
+        r.title,
+        r.content,
+        r.stock_name,
+        r.created_at,
+        r.updated_at,
+        r.deleted_at,
+        r.hits,
+        f.id AS file_id,
+        f.original_filename AS originalFilename,
+        f.stored_filename AS storedFilename,
+        f.upload_path AS uploadPath,
+        u.id AS user_id,
+        u.nickname AS userNickname
+        FROM
+        report r
+        JOIN
+        users u ON r.user_id = u.id
+        LEFT JOIN
+        fileinfo f ON r.file_id = f.id
+        WHERE
+        1=1
+        <include refid="search"/>
+        ORDER BY
+        id DESC
+        LIMIT #{pagination.limitStart}, #{recordSize}
+    </select>
+
+    <select id="getFileById" parameterType="long" resultMap="FileMap">
+        SELECT * FROM fileinfo
+        WHERE id=#{fileId}
+    </select>
+
+    <select id="count" parameterType="searchDto" resultType="int">
+        SELECT COUNT(*)
+        FROM report r
+        JOIN users u ON r.user_id = u.id
+        WHERE
+        1=1
+        <include refid="search"/>
+    </select>
+
+    <!--  resultMap  -->
+
+    <resultMap id="FileMap" type="sammool.board.domain.Fileinfo">
+        <id property="id" column="id"/>
+        <result property="originalFilename" column="original_filename"/>
+        <result property="storedFilename" column="stored_filename"/>
+        <result property="uploadPath" column="upload_path"/>
+    </resultMap>
+
+    <resultMap id="ReportMap" type="sammool.board.domain.Report">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="stockName" column="stock_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deletedAt" column="deleted_at"/>
+        <result property="hits" column="hits"/>
+
+        <result property="fileinfo.id" column="file_id"/>
+        <result property="fileinfo.originalFilename" column="originalFilename"/>
+        <result property="fileinfo.storedFilename" column="storedFilename"/>
+        <result property="fileinfo.uploadPath" column="uploadPath"/>
+
+        <association property="user">
+            <id property="id" column="user_id"/>
+            <result property="nickname" column="userNickname"/>
+        </association>
+    </resultMap>
+
+    <!-- 동적 sql -->
+    <sql id="search">
+        <if test="keyword != null and keyword != ''">
+            <choose>
+                <when test="searchType != null and searchType != '' " >
+                    <choose>
+                        <when test="'title'.equals(searchType)" >
+                            AND r.title LIKE CONCAT('%', #{keyword}, '%')
+                        </when>
+                        <when test="'stockName'.equals(searchType)" >
+                            AND r.stock_name LIKE CONCAT('%', #{keyword}, '%')
+                        </when>
+                        <when test="'writer'.equals(searchType)" >
+                            AND u.nickname LIKE CONCAT('%', #{keyword}, '%')
+                        </when>
+                    </choose>
+                </when>
+
+                <otherwise>
+                    AND(
+                    r.title LIKE CONCAT('%', #{keyword}, '%')
+                    OR r.stock_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR u.nickname LIKE CONCAT('%', #{keyword}, '%')
+                    )
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+</mapper>

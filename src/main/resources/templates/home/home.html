@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="kr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        td a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        td a:hover {
+            text-decoration: underline;
+        }
+
+
+        .paging{
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination{
+            list-style-type: none;
+            display: flex;
+        }
+
+        .pagination .page-item{
+            margin: 0 5px;
+        }
+
+        .pagination .page-link{
+            text-decoration: none;
+            padding: 10px 10px; /* 버튼 패딩 */
+            border: 1px solid transparent; /* 기본 테두리 없음 */
+            border-radius: 5px; /* 버튼 둥근 모서리 */
+            color: black ; /* 기본 링크 색상 없음 */
+            background-color: transparent; /* 기본 배경색 없음 */
+            transition: background-color 0.3s, color 0.3s; /* 배경색 및 색상 전환 효과 */
+        }
+
+        .pagination .current-page{
+            background-color: #007bff;
+            color:white;
+            border:1px solid #007bff;
+        }
+
+        .blue-button{
+            background-color: #007bff; /* 파란색 배경 */
+            color: #ffffff; /* 흰색 글씨 */
+            border: none; /* 테두리 제거 */
+            padding: 10px 20px; /* 패딩 추가 */
+            text-align: center; /* 텍스트 가운데 정렬 */
+            text-decoration: none; /* 링크 텍스트의 밑줄 제거 */
+            display: inline-block; /* 버튼 모양을 유지 */
+            font-size: 16px; /* 글씨 크기 조정 */
+            border-radius: 5px; /* 모서리 둥글게 만들기 */
+            cursor: pointer; /* 커서가 손 모양으로 변경 */
+            transition: background-color 0.3s;
+        }
+        .bold-text{
+            font-weight: bold
+        }
+        .write{
+            text-align: right;
+        }
+
+    </style>
+
+</head>
+<body>
+<header>
+    <div th:if="${session['loginUser']} == null">
+        <button th:onclick="|location.href='@{/user/login}'|">로그인</button>
+        <button th:onclick="|location.href='@{/user/register}'|">회원가입</button>
+    </div>
+
+    <div th:if="${session['loginUser']} != null">
+        <span th:text="${session['loginUser'].username} + '님 환영합니다!' ">이름</span>
+
+        <form th:action="@{/user/logout}" method="post" style="display:inline;">
+            <button type="submit">로그아웃</button>
+        </form>
+    </div>
+
+    <h2>
+        <a th:href="@{/}">기업 분석 리포트</a>
+    </h2>
+
+    <div class="write"></div>
+    <button class="blue-button" th:onclick="|location.href='@{/report/createReport}'|">작성하기</button>
+    </div>
+
+</header>
+
+<main>
+    <!--  검색  -->
+    <div class="search_box"></div>
+    <form th:action method="get">
+        <div>
+            <select id="searchType" name="searchType" title="검색 유형">
+                <option value="">전체 검색</option>
+                <option value="title">제목</option>
+                <option value="stockName">종목명</option>
+                <option value="wirter">작성자</option>
+            </select>
+            <input type="text" id="keyword" name="keyword">
+            <input type="hidden" id="page" name="page" value="1">
+            <button type="submit">검색</button>
+        </div>
+    </form>
+    </div>
+
+    <div>
+        <table>
+            <tr>
+                <th>작성일자</th>
+                <th>종목명</th>
+                <th>제목</th>
+                <th>첨부파일</th>
+                <th>작성자</th>
+            </tr>
+
+            <tr th:each="report : ${response.list}">
+
+                <td th:text="${report.createdAt}"></td>
+
+                <td th:text="${report.stockName}">종목명</td>
+                <td>
+                    <a th:href="@{|/report/${report.id}|}" th:text="${report.title}" class="bold-text"></a>
+                </td>
+
+
+                <td>
+                    <a th:if="${report.fileinfo}" th:href="|/report/file/${report.fileinfo.id}|"
+                       th:text="${report.fileinfo.originalFilename}"></a>
+
+                    <span th:if="${report.fileinfo == null}">첨부파일 없음</span>
+                </td>
+
+                <td th:text="${report.user.nickname}"></td>
+            </tr>
+        </table>
+    </div>
+</main>
+
+<div class="paging">
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <!--첫 페이지-->
+            <li class="page-item">
+                <a class="page-link" th:href="@{/?page=1(searchType=${params.searchType}, keyword=${params.keyword})}" aria-label="Previous">
+                    <span><<</span>
+                </a>
+            </li>
+
+            <!--recordSize만큼 뒤로가기-->
+            <li class="page-item">
+                <a class="page-link" th:href="${response.pagination.startPage} - ${params.recordSize} >= 1 ? @{/?page={page}(page=${response.pagination.startPage} - ${params.recordSize}, searchType=${params.searchType}, keyword=${params.keyword})} : '#'" aria-label="Previous">
+                    <span aria-hidden="true"><</span>
+                </a>
+            </li>
+
+            <!--페이지 번호-->
+            <th:block th:with="start=${response.pagination.startPage}, end=${response.pagination.endPage}">
+                <li class="page-item" th:each="pageButton : ${#numbers.sequence(start, end)}" th:classappend="${params.page == pageButton} ? 'current-page' : ''">
+                    <a class="page-link" th:href="@{/?page={page}(page=${pageButton}, searchType=${params.searchType}, keyword=${params.keyword})}" th:text="${pageButton}"></a>
+                </li>
+            </th:block>
+
+            <!--recordSize만큼 앞으로 가기-->
+            <li class="page-item">
+                <a class="page-link" th:href="${response.pagination.startPage} + ${params.recordSize} <= ${response.pagination.totalPageCount} ? @{/?page={page}(page=${response.pagination.startPage} + ${params.recordSize}, searchType=${params.searchType}, keyword=${params.keyword})} : '#'" aria-label="Next">
+                    <span aria-hidden="true">></span>
+                </a>
+            </li>
+
+            <!-- 마지막 페이지 -->
+            <li class="page-item">
+                <a class="page-link" th:href="@{/?page={page}(page=${response.pagination.totalPageCount}, searchType=${params.searchType}, keyword=${params.keyword})}" aria-label="Next">
+                    <span aria-hidden="true">>></span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+</body>
+</html>
