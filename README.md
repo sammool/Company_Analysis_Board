@@ -24,7 +24,8 @@
 
 - multipartFile을 이용하여 파일 업로드를 구현하였습니다.
 <br>
-## 어려웠던 부분과 극복한 점
+
+**어려웠던 부분과 극복한 점**
 
 - 어려웠던 점 : 초기에 ReportService, CommentService, FileService를 분리하여 설계하였지만 ReportService에서 CommentService와 FileService를 모두 의존하는 것이 복잡성을 증가시킨다는 생각이 들었습니다. 단일 책임 원칙을 지키면서도 클래스 간의 의존성을 줄일 수 있는 방법이 무엇이 있을까 고민했습니다.
 
